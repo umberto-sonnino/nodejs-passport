@@ -1,9 +1,13 @@
 // app/routes
+
+var Message = require('./models/messages');
+ 
 module.exports = function(app, passport)
 {
 	//HOME PAGE
 	app.get('/', function(req, res)
 	{
+		console.log("BODY =====\n" + req.body);
 		res.render('index.ejs'); //load index.ejs file
 	});
 
@@ -166,7 +170,98 @@ module.exports = function(app, passport)
             res.redirect('/profile');
         });
     });
+
+    // Send messages
+    app.get('/send_message', isLoggedIn, function(req, res)
+    {
+		var mes = new Message();
+		var email = (function()
+		{
+			if(req.user.local.email)
+				return req.user.local.email;
+			if(req.user.facebook.email)
+				return req.user.facebook.email;
+			if(req.user.google.email)
+				return req.user.google.email;
+		}) ();
+
+    	mes.text = "I am a new message";
+    	mes.createdAt = (new Date()).getTime();
+    	mes.senderId = req.user.id;
+    	mes.senderEmail = email;
+    	mes.squareId = "#Google Workshop";
+
+    	mes.save(function(err)
+    	{
+    		if(err) throw err;
+    		console.log(mes);
+    	});
+
+		res.send(req.user + " created a new message!");
+    });
 	
+    app.get('/get_messages', isLoggedIn, function(req, res)
+    {
+    	var squareId = req.param('squareId');
+    	var senderId = req.user.id;
+    	
+    	if(senderId && squareId)
+    	{
+	    	console.log(squareId);
+	    	console.log(senderId);
+
+	    	var params = { 'senderId':senderId, 'squareId':squareId };
+	    	
+	    	var query = findMessages(params, res);
+	    	query.exec(
+	    		function(err,messages)
+		    	{
+		    		if(err) throw err;
+
+		    		res.send(messages[0]);
+		    	});
+
+    	}else if(senderId)
+    	{
+    		console.log(senderId);
+	    	var params = { 'senderId':senderId };
+			var query = findMessages(params, res);
+	    	query.exec(
+	    		function(err,messages)
+		    	{
+		    		if(err) throw err;
+
+		    		res.send(messages[0]);
+		    	});
+
+    	}else if(squareId)
+    	{
+    		console.log(squareId);
+	    	var params = { 'squareId':squareId};
+	    	var query = findMessages(params, res);
+	    	query.exec(
+	    		function(err,messages)
+		    	{
+		    		if(err) throw err;
+
+		    		res.send(messages);
+		    	});
+
+    	}
+    	else
+    	{
+    		console.log("No parameters!");
+			var query = findMessages({}, res);
+	    	query.exec(
+	    		function(err,messages)
+		    	{
+		    		if(err) throw err;
+
+		    		res.send(messages);
+		    	});
+
+	    }
+    });
 };
 
 function isLoggedIn(req, res, next)
@@ -177,4 +272,10 @@ function isLoggedIn(req, res, next)
 
 	// else redirect to home page
 	res.redirect('/');
+}
+
+function findMessages(params)
+{
+	var vals = 	Message.find(params);
+	return vals;
 }
