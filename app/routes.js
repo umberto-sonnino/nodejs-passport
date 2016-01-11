@@ -202,6 +202,8 @@ module.exports = function(app, passport)
 	
     app.get('/get_messages', isLoggedIn, function(req, res)
     {
+    	// If url is http://<...>/get_messages/squareId=Sapienza
+		// it'll get the value in the parameter (->Sapienza)
     	var squareId = req.param('squareId');
     	var senderId = req.user.id;
     	
@@ -262,6 +264,36 @@ module.exports = function(app, passport)
 
 	    }
     });
+
+	app.get('/chat', function(req, res)
+	{
+		// If url is http://<...>/chat?squareId=Sapienza
+		// it'll get the value in the parameter (->Sapienza)
+		var squareId = req.param('squareId');
+
+		if(squareId == undefined)
+		{
+			console.log("No Id specified");
+			squareId = "Home";
+		}
+		
+		console.log("Currently in" + squareId);
+
+		res.render('chat.ejs', {
+			user: req.user, //get the user from the session and pass to template
+			squareId: squareId
+		});
+	});
+
+	app.io.on('connection', function(socket)
+	{
+		console.log("I am Socket.IO");
+		socket.emit('news', {hello: 'world'});
+		socket.on('my other event', function(data)
+		{
+			console.log(data);
+		});
+	});
 };
 
 function isLoggedIn(req, res, next)

@@ -1,9 +1,15 @@
 var express = require('express');
 var app = express();
 var port = process.env.PORT || 8080;
+var chatPort = process.env.PORT || 3030;
 var mongoose = require('mongoose');
 var passport = require('passport');
 var flash = require('connect-flash');
+
+var server = require('http').Server(app);
+app.io = require('socket.io')(server);
+
+server.listen(chatPort);
 
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
