@@ -1,15 +1,13 @@
 var express = require('express');
 var app = express();
-var port = process.env.PORT || 8080;
-var chatPort = process.env.PORT || 3030;
+var port = process.env.PORT || 8050;
 var mongoose = require('mongoose');
 var passport = require('passport');
 var flash = require('connect-flash');
 
 var server = require('http').Server(app);
-app.io = require('socket.io')(server);
-
-server.listen(chatPort);
+var io = require('socket.io')(server);
+var squares = io.of('/squares');
 
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
@@ -39,8 +37,11 @@ app.use(flash());	//use connect-flash for flash messages stored in session
 
 //routes
 //======
-require('./app/routes.js')(app, passport); 
+require('./app/routes.js')(app, passport, io); 
+require('./app/chats.js')(app, passport, squares);
 //load routes and pass in our app and passport configured successfully
 
-app.listen(port);
+// app.listen(port);
+server.listen(port);
 console.log("Live magic on port " + port);
+

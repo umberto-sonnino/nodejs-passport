@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Basic Chat</title>
+	<!-- <link rel='stylesheet' href='/stylesheet/style.css'/> -->
+	<script>
+	var usr;
+	var socket;
+	var id;
+	</script>
+	<script>
+	function sendFunction()
+	{
+		var data = document.getElementById("new-message").value;
+
+		if(data != "")
+		{
+			console.log(usr + " said: " + data);
+			socket.emit('news', { 
+				room: id,
+				user: usr,
+		 		message: data
+		 	});
+	
+			document.getElementById("new-message").value = "";
+		}else
+		{
+			console.log("This is an empty message");
+		}
+	}
+
+	function askName()
+	{
+		while(usr == undefined || usr == "" || usr == null)
+		{
+			usr = prompt("What's your name?");
+			console.log("User is " + usr);
+		}
+	}
+	</script>
+</head>
+<body onload="askName()">
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		id = "<%=squareId %>";
+		socket = io.connect("http://localhost:8050/squares");
+
+		socket.on('connect', function()
+		{
+			console.log("Connecting..");
+			socket.emit('addUser', { 
+				user:usr,
+				room:id
+			});
+		});
+
+		// TODO count the users in the chat 
+		// ====> require the implementation of rooms first
+		// socket.on('addUser')
+
+		socket.on('updateUsers', function(data)
+		{
+			var users_count = document.getElementById("users").value;
+		});
+
+		socket.on('updateChat', function(username, data)
+		{
+			console.log("User: " + usr);
+			var messages = document.getElementById("messages-area");
+			var li = document.createElement("li");
+			var text = username + ": " + data;
+			li.appendChild(document.createTextNode(text));
+			
+			messages.appendChild(li);
+
+		});
+	</script>
+	<h1>List of messages from <%= squareId %></h1>
+	<h3 id="users">Users #: </h3>
+
+	<ul id="messages-area"></ul>
+
+	<form id="form" onsubmit="return false;">
+		<input id="new-message" type="text" />
+			<button onclick="sendFunction()">Send Message</button>
+	</form>
+
+</body>
+</html>
