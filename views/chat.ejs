@@ -19,7 +19,8 @@
 			socket.emit('news', { 
 				room: id,
 				user: usr,
-		 		message: data
+		 		message: data,
+		 		email: usr+"@insquare.com"
 		 	});
 	
 			document.getElementById("new-message").value = "";
@@ -53,10 +54,6 @@
 				room:id
 			});
 		});
-
-		// TODO count the users in the chat 
-		// ====> require the implementation of rooms first
-		// socket.on('addUser')
 
 		socket.on('updateUsers', function(data)
 		{

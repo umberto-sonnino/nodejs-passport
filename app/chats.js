@@ -1,4 +1,6 @@
 var Message = require('./models/messages');
+var http = require('http');
+
 
 module.exports = function(app, passport, squares)
 {
@@ -7,16 +9,18 @@ module.exports = function(app, passport, squares)
 		socket.on('addUser', function(data)
 		{
 			var room = data.room;
+			
 			if(room != "" || room != null || room != undefined)
 			{
-				console.log("Room: " + room);
+				
+				socket.username = data.user;
+				socket.emit('updateChat', data.user, 'you have connected');
+			    // echo globally (all clients) that a person has connected
+			    socket.broadcast.emit('updateChat', 'Server', data.user + ' has connected');
+			    // update the list of users in the chat, client side
+			    // io.sockets.emit('updateUsers', usernames);
 			}
-			socket.username = data.user;
-			socket.emit('updateChat', data.user, 'you have connected');
-		    // echo globally (all clients) that a person has connected
-		    socket.broadcast.emit('updateChat', 'Server', data.user + ' has connected');
-		    // update the list of users in the chat, client side
-		    // io.sockets.emit('updateUsers', usernames);
+			
 		});
 
 		socket.on('news', function(data)
@@ -25,24 +29,31 @@ module.exports = function(app, passport, squares)
 			if(room != "" || room != null || room != undefined)
 			{
 				console.log("Room: " + room);
-			}
-			console.log(data.user + " said: " + data.message);
 
-			socket.emit('updateChat', data.user, data.message);
-			socket.broadcast.emit('updateChat', data.user, data.message);
+				console.log(data.user + " said: " + data.message);
+
+				socket.emit('updateChat', data.user, data.message);
+				socket.broadcast.emit('updateChat', data.user, data.message);
+
+				sendMessage(data.message, data.user, data.email, room);
+			}
 		});
 
 		socket.on('disconnect', function()
 		{
 			console.log(socket.username + " disconnected");
 			socket.broadcast.emit('updateChat', 'Server', socket.username + " is now disconnected");
+			socket.broadcast.emit('removeUser', socket.username);
 		});
 	});
 
 	// Send messages
     app.get('/send_message', isLoggedIn, function(req, res)
     {
-		var mes = new Message();
+    	console.log("Trying to send a message!");
+		var text = req.query.message;
+		var room = req.query.square;
+
 		var email = (function()
 		{
 			if(req.user.local.email)
@@ -53,17 +64,7 @@ module.exports = function(app, passport, squares)
 				return req.user.google.email;
 		}) ();
 
-    	mes.text = "I am a new message";
-    	mes.createdAt = (new Date()).getTime();
-    	mes.senderId = req.user.id;
-    	mes.senderEmail = email;
-    	mes.squareId = "#Google Workshop";
-
-    	mes.save(function(err)
-    	{
-    		if(err) throw err;
-    		console.log(mes);
-    	});
+		sendMessage(text, user, email, square);
 
 		res.send(req.user + " created a new message!");
     });
@@ -165,7 +166,6 @@ module.exports = function(app, passport, squares)
 				squareId: squareId
 			});
 	});
-
 };
 
 function isLoggedIn(req, res, next)
@@ -178,3 +178,20 @@ function isLoggedIn(req, res, next)
 	res.redirect('/');
 }
 
+function sendMessage(text, user, email, square)
+{
+	var mes = new Message(); 
+
+	mes.text = text;
+	mes.createdAt = (new Date()).getTime();
+	mes.senderId = user;
+	mes.senderEmail = email;
+	mes.squareId = square;
+
+	mes.save(function(err)
+	{
+		if(err) throw err;
+		console.log(mes);
+	});
+
+}
