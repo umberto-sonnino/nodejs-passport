@@ -67,11 +67,6 @@
 			});
 		});
 
-		socket.on('userJoined', function(data)
-		{
-			addConversation(data.user + ": " + data.contents);
-		});
-
 		//when receiving a new message adds it to the list
 		socket.on('newMessage', function(message)
 		{
@@ -83,6 +78,17 @@
 			var text = message.user + ": " + message.contents;
 		
 			addConversation(text);
+		});
+
+
+		socket.on('userJoined', function(data)
+		{
+			addConversation(data.user + ": " + data.contents);
+		});
+
+		socket.on('userLeft', function(data)
+		{
+			addConversation(data.user + " has left");
 		});
 	</script>
 	<h1>List of messages from <%= squareId %></h1>

@@ -60,8 +60,10 @@ module.exports = function(app, passport, squares)
 		socket.on('disconnect', function()
 		{
 			console.log(socket.username + " disconnected");
-			socket.broadcast.emit('newMessage', 'Server', socket.username + " is now disconnected");
-			socket.broadcast.emit('userLeft', socket.username);
+			var data = {};
+			data.user = socket.username;
+			// socket.broadcast.emit('newMessage', 'Server', socket.username + " is now disconnected");
+			socket.broadcast.emit('userLeft', data);
 		});
 
 		socket.on('typing', function()
