@@ -26,7 +26,7 @@ module.exports = function(app, passport, squares)
 				serverMessage.contents = data.user + " has connected";
 				
 				// echo globally (all clients) that a person has connected
-			    socket.broadcast.emit('newMessage', serverMessage);
+			    socket.broadcast.emit('userJoined', serverMessage);
 
 				// socket.emit('newMessage', message);
 			    
