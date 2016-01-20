@@ -2,7 +2,6 @@
 <html>
 <head>
 	<title>Basic Chat</title>
-	<!-- <link rel='stylesheet' href='/stylesheet/style.css'/> -->
 	<script>
 	var usr;
 	var socket;
@@ -16,7 +15,7 @@
 		if(data != "")
 		{
 			console.log(usr + " said: " + data);
-			socket.emit('news', { 
+			socket.emit('sendMessage', { 
 				room: id,
 				user: usr,
 		 		message: data,
@@ -24,6 +23,12 @@
 		 	});
 	
 			document.getElementById("new-message").value = "";
+
+			var messages = document.getElementById("messages-area");
+			var li = document.createElement("li");
+			li.appendChild(document.createTextNode("You: " + data));
+			messages.appendChild(li);
+
 		}else
 		{
 			console.log("This is an empty message");
@@ -32,6 +37,7 @@
 
 	function askName()
 	{
+		usr = "<%= user %>";
 		while(usr == undefined || usr == "" || usr == null)
 		{
 			usr = prompt("What's your name?");
@@ -43,7 +49,7 @@
 <body onload="askName()">
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
-		id = "<%=squareId %>";
+		id = "<%= squareId %>";
 		socket = io.connect("http://localhost:8050/squares");
 
 		socket.on('connect', function()
@@ -60,12 +66,18 @@
 			var users_count = document.getElementById("users").value;
 		});
 
-		socket.on('updateChat', function(username, data)
+		//when receiving a new message adds it to the list
+		socket.on('newMessage', function(message)
 		{
-			console.log("User: " + usr);
+			// Message is a JS object with fields:
+			// .room
+			// .user
+			// .contents
+			
+			var text = message.user + ": " + message.contents;
+
 			var messages = document.getElementById("messages-area");
 			var li = document.createElement("li");
-			var text = username + ": " + data;
 			li.appendChild(document.createTextNode(text));
 			
 			messages.appendChild(li);

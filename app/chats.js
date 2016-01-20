@@ -14,17 +14,31 @@ module.exports = function(app, passport, squares)
 			{
 				
 				socket.username = data.user;
-				socket.emit('updateChat', data.user, 'you have connected');
-			    // echo globally (all clients) that a person has connected
-			    socket.broadcast.emit('updateChat', 'Server', data.user + ' has connected');
+
+				// var message = {};
+				// message.room = data.room;
+				// message.user = data.user;
+				// message.contents = "you have connected";
+				
+				var serverMessage = {};
+				serverMessage.room = data.room;
+				serverMessage.user = "Server";
+				serverMessage.contents = data.user + " has connected";
+				
+				// echo globally (all clients) that a person has connected
+			    socket.broadcast.emit('newMessage', serverMessage);
+
+				// socket.emit('newMessage', message);
+			    
 			    // update the list of users in the chat, client side
 			    // io.sockets.emit('updateUsers', usernames);
 			}
 			
 		});
 
-		socket.on('news', function(data)
+		socket.on('sendMessage', function(data)
 		{
+			var message = {};
 			var room = data.room;
 			if(room != "" || room != null || room != undefined)
 			{
@@ -32,8 +46,12 @@ module.exports = function(app, passport, squares)
 
 				console.log(data.user + " said: " + data.message);
 
-				socket.emit('updateChat', data.user, data.message);
-				socket.broadcast.emit('updateChat', data.user, data.message);
+				message.room = data.room;
+				message.user = data.user;
+				message.contents = data.message;
+
+				// socket.emit('newMessage', data.user, data.message);
+				socket.broadcast.emit('newMessage', message);
 
 				sendMessage(data.message, data.user, data.email, room);
 			}
@@ -42,8 +60,18 @@ module.exports = function(app, passport, squares)
 		socket.on('disconnect', function()
 		{
 			console.log(socket.username + " disconnected");
-			socket.broadcast.emit('updateChat', 'Server', socket.username + " is now disconnected");
-			socket.broadcast.emit('removeUser', socket.username);
+			socket.broadcast.emit('newMessage', 'Server', socket.username + " is now disconnected");
+			socket.broadcast.emit('userLeft', socket.username);
+		});
+
+		socket.on('typing', function()
+		{
+			console.log(socket.username + " is typing");
+		});
+
+		socket.on('stopTyping', function(data)
+		{
+			console.log(socket.username + " stopped typing");
 		});
 	});
 
@@ -136,18 +164,17 @@ module.exports = function(app, passport, squares)
 	
 	// CHATS
 	// =====
-	app.use('/chat', function(req, res, next)
-	{
-		var id = req.query.squareId;
-
-		// io.of("");
-		next();
-	});
+	// app.use('/chat', function(req, res, next)
+	// {
+	// 	var id = req.query.squareId;
+	// 	next();
+	// });
 	app.get('/chat', function(req, res)
 	{
 		// If url is http://<...>/chat?squareId=Sapienza
 		// it'll get the value in the parameter (->Sapienza)
 		var squareId = req.query.squareId;
+		var username = req.query.user;
 
 		if(squareId == undefined)
 		{
@@ -157,12 +184,10 @@ module.exports = function(app, passport, squares)
 		
 		console.log("Currently in " + squareId);
 
-		// var chat = app.io("http://localhost:" + Server.port + "/" + squareId);
-
 		res.render('chat.ejs', 
-			//We can pass JS objects to the template
+			//Passing JS objects to the ejs template
 			{
-				user: req.user, 
+				user: username, 
 				squareId: squareId
 			});
 	});
