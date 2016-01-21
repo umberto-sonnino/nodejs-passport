@@ -4,8 +4,8 @@ var mongoose = require('mongoose');
 var squareSchema = mongoose.Schema({
 	squareName: String, // TODO make this unique (?)
 	location: {
-		x: Double,
-		y: Double
+		x: Number,
+		y: Number
 	}
 });
 

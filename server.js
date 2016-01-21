@@ -25,12 +25,21 @@ require('./config/passport')(passport); //passport for configuration
 //setup for express
 app.use(morgan('dev')); //log requests to console
 app.use(cookieParser()); //read cookies -> auth
-app.use(bodyParser());	//information from html forms
+app.use(bodyParser.urlencoded(
+	{extended: true}
+));	//information from html forms
+app.use(bodyParser.json());
 
+// for embedded javascript into pages
 app.set('view engine', 'ejs'); //ejs for templating
 
 //setup for passport
-app.use(session({secret:'bettoismysecretlover'})); 
+app.use(session(
+{
+	secret:'bettoismysecretlover',
+ 	resave: false,
+    saveUninitialized : false
+})); 
 app.use(passport.initialize());
 app.use(passport.session()); //persistent login sessions
 app.use(flash());	//use connect-flash for flash messages stored in session
@@ -38,7 +47,8 @@ app.use(flash());	//use connect-flash for flash messages stored in session
 //routes
 //======
 require('./app/routes.js')(app, passport, io); 
-require('./app/chats.js')(app, passport, squares);
+require('./app/chat_routes.js')(app, passport, squares);
+require('./app/square_routes.js')(app, passport);
 //load routes and pass in our app and passport configured successfully
 
 // app.listen(port);
