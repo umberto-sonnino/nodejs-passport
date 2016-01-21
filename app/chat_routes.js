@@ -222,3 +222,9 @@ function sendMessage(text, user, email, square)
 	});
 
 }
+
+function findMessages(params)
+{
+	var vals = 	Message.find(params);
+	return vals;
+}
