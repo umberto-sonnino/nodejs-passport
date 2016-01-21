@@ -164,6 +164,19 @@ module.exports = function(app, passport, squares)
 	    }
     });
 	
+	app.get('/get_all_messages', function(req, res)
+    {
+    	var query = findMessages({}, res);
+	    	query.exec(
+	    		function(err,messages)
+		    	{
+		    		if(err) throw err;
+		    		var JSON = {};
+		    		JSON.messages = messages;
+		    		res.send(JSON);
+		    	});
+	});
+
 	// CHATS
 	// =====
 	// app.use('/chat', function(req, res, next)

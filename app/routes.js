@@ -179,9 +179,3 @@ function isLoggedIn(req, res, next)
 	// else redirect to home page
 	res.redirect('/');
 }
-
-function findMessages(params)
-{
-	var vals = 	Message.find(params);
-	return vals;
-}
